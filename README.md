@@ -13,17 +13,27 @@ One command to set up the perfect terminal environment for Claude Code developme
 - **Backup & restore** - Never lose your existing configs
 - **Doctor** - Diagnose your terminal setup
 
-## Quick Start
+## Install
 
 ```bash
-npx claude-den init
+# Clone and install globally
+git clone https://github.com/Longado/claude-den.git
+cd claude-den
+npm install && npm run build
+npm link
+
+# Now use it anywhere
+den init
 ```
 
-The interactive wizard will:
-1. Detect your terminal and OS
-2. Let you choose a color theme
-3. Configure your terminal, Starship prompt, and tmux
-4. Backup existing configs before overwriting
+Or run directly without installing:
+
+```bash
+git clone https://github.com/Longado/claude-den.git
+cd claude-den
+npm install && npm run build
+node dist/bin/den.js init
+```
 
 ## Commands
 
@@ -74,7 +84,7 @@ The interactive wizard will:
 ## Development
 
 ```bash
-git clone https://github.com/your-username/claude-den.git
+git clone https://github.com/Longado/claude-den.git
 cd claude-den
 npm install
 npm test
