@@ -1,0 +1,52 @@
+{
+  "name": "claude-den",
+  "version": "0.1.0",
+  "description": "Your cozy terminal den for Claude Code",
+  "type": "module",
+  "bin": {
+    "den": "./dist/bin/den.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "terminal",
+    "ghostty",
+    "iterm2",
+    "kitty",
+    "alacritty",
+    "starship",
+    "tmux",
+    "theme",
+    "developer-experience"
+  ],
+  "author": "Eddie",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "inquirer": "^12.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "eslint": "^9.25.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ]
+}

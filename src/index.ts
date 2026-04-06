@@ -1,0 +1,11 @@
+export { detectTerminal } from "./detect/terminal.js";
+export { detectCapabilities } from "./detect/capabilities.js";
+export { detectOS } from "./detect/os.js";
+export { getTheme, listThemes } from "./themes/index.js";
+export { generateGhosttyConfig } from "./configs/ghostty/config.js";
+export { generateIterm2Profile } from "./configs/iterm2/profile.js";
+export { generateKittyConfig } from "./configs/kitty/config.js";
+export { generateAlacrittyConfig } from "./configs/alacritty/config.js";
+export { generateStarshipConfig } from "./configs/starship/config.js";
+export { generateTmuxConfig } from "./configs/tmux/config.js";
+export type { Theme, TerminalInfo, Capabilities, OSInfo } from "./types.js";
