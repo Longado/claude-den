@@ -4,6 +4,8 @@ Your cozy terminal den for Claude Code.
 
 One command to set up the perfect terminal environment for Claude Code development.
 
+![demo](demo.gif)
+
 ## Features
 
 - **Auto-detect terminal** - Ghostty, iTerm2, Kitty, Alacritty, Warp, and more
