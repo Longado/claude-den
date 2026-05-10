@@ -1,4 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { platform } from "node:os";
 import { join } from "node:path";
 import type { TerminalInfo, TerminalType } from "../types.js";
 
@@ -82,18 +84,38 @@ export function detectTerminal(
   };
 }
 
-export function isTerminalInstalled(type: TerminalType): boolean {
-  const appPaths: Partial<Record<TerminalType, string>> = {
-    ghostty: "/Applications/Ghostty.app",
-    iterm2: "/Applications/iTerm.app",
-    warp: "/Applications/Warp.app",
-    kitty: "/Applications/kitty.app",
-    alacritty: "/Applications/Alacritty.app",
-  };
+const MACOS_APP_PATHS: Partial<Record<TerminalType, string>> = {
+  ghostty: "/Applications/Ghostty.app",
+  iterm2: "/Applications/iTerm.app",
+  warp: "/Applications/Warp.app",
+  kitty: "/Applications/kitty.app",
+  alacritty: "/Applications/Alacritty.app",
+};
 
-  const appPath = appPaths[type];
-  if (!appPath) return false;
-  return existsSync(appPath);
+const POSIX_COMMANDS: Partial<Record<TerminalType, string>> = {
+  ghostty: "ghostty",
+  kitty: "kitty",
+  alacritty: "alacritty",
+  warp: "warp-terminal",
+};
+
+function commandExists(cmd: string): boolean {
+  try {
+    execFileSync("which", [cmd], { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isTerminalInstalled(type: TerminalType): boolean {
+  if (platform() === "darwin") {
+    const appPath = MACOS_APP_PATHS[type];
+    if (appPath && existsSync(appPath)) return true;
+  }
+  const cmd = POSIX_COMMANDS[type];
+  if (!cmd) return false;
+  return commandExists(cmd);
 }
 
 export function listInstalledTerminals(): ReadonlyArray<TerminalInfo> {

@@ -126,22 +126,24 @@ export function registerInitCommand(program: Command): void {
       }
 
       // Step 4: Additional options
-      const { setupStarship, setupTmux } = await inquirer.prompt([
+      const answers = await inquirer.prompt([
         {
           type: "confirm",
           name: "setupStarship",
           message: "Setup Starship prompt with Claude Code theme?",
-          default: options.starship !== false,
+          default: true,
           when: () => options.starship !== false,
         },
         {
           type: "confirm",
           name: "setupTmux",
           message: "Setup tmux with Claude Code workflow keybindings?",
-          default: options.tmux !== false,
+          default: true,
           when: () => options.tmux !== false,
         },
       ]);
+      const setupStarship = options.starship !== false && answers.setupStarship === true;
+      const setupTmux = options.tmux !== false && answers.setupTmux === true;
 
       // Step 5: Generate and install configs
       console.log(chalk.blue("\n  Installing configurations...\n"));
@@ -149,6 +151,13 @@ export function registerInitCommand(program: Command): void {
 
       // Terminal config
       const generator = CONFIG_GENERATORS[selectedTerminal as TerminalType];
+      if (!generator) {
+        console.log(
+          chalk.yellow(
+            `  ! ${selectedTerminal} config generation is not yet supported. Skipping terminal config.`,
+          ),
+        );
+      }
       if (generator) {
         const configContent = generator(selectedTheme);
         const getDestination = CONFIG_DESTINATIONS[selectedTerminal as TerminalType];
@@ -185,7 +194,7 @@ export function registerInitCommand(program: Command): void {
       }
 
       // Starship config
-      if (setupStarship !== false) {
+      if (setupStarship) {
         const starshipPath = join(home, ".config", "starship.toml");
         if (existsSync(starshipPath)) {
           backupFile(starshipPath);
@@ -218,7 +227,7 @@ export function registerInitCommand(program: Command): void {
       }
 
       // tmux config
-      if (setupTmux !== false) {
+      if (setupTmux) {
         const tmuxPath = join(home, ".tmux.conf");
         if (existsSync(tmuxPath)) {
           backupFile(tmuxPath);

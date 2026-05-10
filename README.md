@@ -8,7 +8,7 @@ One command to set up the perfect terminal environment for Claude Code developme
 
 ## Features
 
-- **Auto-detect terminal** - Ghostty, iTerm2, Kitty, Alacritty, Warp, and more
+- **Auto-detect terminal** - Ghostty, iTerm2, Kitty, Alacritty, and more
 - **5 built-in themes** - Catppuccin Mocha, Nord, Tokyo Night, Dracula, Gruvbox
 - **Starship prompt** - Claude Code-aware status line with git integration
 - **tmux layouts** - Predefined workflows: coding, parallel agents, monitoring
@@ -75,7 +75,7 @@ node dist/bin/den.js init
 - iTerm2
 - Kitty
 - Alacritty
-- Warp
+- Warp _(detection only — config generator coming in v0.3)_
 
 ## Prerequisites
 
