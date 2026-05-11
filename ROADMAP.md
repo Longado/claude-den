@@ -20,8 +20,8 @@ MVP shipped. Core features working:
 - [ ] **Post on Chinese communities** — V2EX, 掘金
 - [ ] **npm link fix** — Add `postinstall` script or improve bin path
 - [ ] **Better GIF** — Record with `den` command (after npm global install works)
-- [ ] **Add `--dry-run` to init** — Show what would change without writing files
-- [ ] **Improve error messages** — Better guidance when tools not installed
+- [x] **Add `--dry-run` to init** — Show what would change without writing files
+- [x] **Improve error messages** — Better guidance when tools not installed
 
 Release: `npm publish` as v0.2.0
 

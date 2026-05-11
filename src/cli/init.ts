@@ -7,6 +7,7 @@ import { homedir } from "node:os";
 import { detectTerminal, listInstalledTerminals } from "../detect/terminal.js";
 import { detectCapabilities } from "../detect/capabilities.js";
 import { detectOS } from "../detect/os.js";
+import { commandExists, installHint } from "../detect/system.js";
 import { listThemes, getThemeOrDefault } from "../themes/index.js";
 import { generateGhosttyConfig } from "../configs/ghostty/config.js";
 import { generateIterm2Profile } from "../configs/iterm2/profile.js";
@@ -15,7 +16,7 @@ import { generateAlacrittyConfig } from "../configs/alacritty/config.js";
 import { generateStarshipConfig } from "../configs/starship/config.js";
 import { generateTmuxConfig } from "../configs/tmux/config.js";
 import { backupFile } from "./backup.js";
-import type { TerminalType, Theme } from "../types.js";
+import type { OSType, TerminalType, Theme } from "../types.js";
 
 const CONFIG_DESTINATIONS: Readonly<
   Partial<Record<TerminalType, (home: string) => string>>
@@ -42,6 +43,38 @@ function writeConfig(path: string, content: string): void {
   writeFileSync(path, content, "utf-8");
 }
 
+export function applyConfig(
+  destPath: string,
+  content: string,
+  label: string,
+  dryRun: boolean,
+): void {
+  const existed = existsSync(destPath);
+  if (dryRun) {
+    if (existed) {
+      console.log(chalk.cyan(`  [dry-run] Would back up ${destPath}`));
+    }
+    console.log(
+      chalk.cyan(`  [dry-run] Would write ${label} → ${destPath} (${content.length} bytes)`),
+    );
+    return;
+  }
+  if (existed) {
+    backupFile(destPath);
+    console.log(chalk.dim(`    Backed up existing config`));
+  }
+  writeConfig(destPath, content);
+  console.log(chalk.green(`  ✓ ${label} → ${destPath}`));
+}
+
+function warnIfMissing(cmd: string, label: string, osType: OSType): void {
+  if (commandExists(cmd)) return;
+  console.log(
+    chalk.yellow(`  ! ${label} is not installed. Config written, but you'll need:`),
+  );
+  console.log(chalk.dim(`    ${installHint(cmd, osType)}`));
+}
+
 export function registerInitCommand(program: Command): void {
   program
     .command("init")
@@ -49,7 +82,9 @@ export function registerInitCommand(program: Command): void {
     .option("-t, --theme <name>", "Theme name (skip theme selection)")
     .option("--no-starship", "Skip Starship configuration")
     .option("--no-tmux", "Skip tmux configuration")
+    .option("--dry-run", "Preview changes without writing any files")
     .action(async (options) => {
+      const dryRun = options.dryRun === true;
       console.log(
         chalk.bold.blue("\n  Claude Den\n"),
       );
@@ -146,7 +181,13 @@ export function registerInitCommand(program: Command): void {
       const setupTmux = options.tmux !== false && answers.setupTmux === true;
 
       // Step 5: Generate and install configs
-      console.log(chalk.blue("\n  Installing configurations...\n"));
+      console.log(
+        chalk.blue(
+          dryRun
+            ? "\n  Dry run — previewing changes (no files will be written)...\n"
+            : "\n  Installing configurations...\n",
+        ),
+      );
       const home = homedir();
 
       // Terminal config
@@ -163,14 +204,11 @@ export function registerInitCommand(program: Command): void {
         const getDestination = CONFIG_DESTINATIONS[selectedTerminal as TerminalType];
 
         if (getDestination) {
-          const destPath = getDestination(home);
-          if (existsSync(destPath)) {
-            backupFile(destPath);
-            console.log(chalk.dim(`    Backed up existing config`));
-          }
-          writeConfig(destPath, configContent);
-          console.log(
-            chalk.green(`  ✓ ${selectedTerminal} config → ${destPath}`),
+          applyConfig(
+            getDestination(home),
+            configContent,
+            `${selectedTerminal} config`,
+            dryRun,
           );
         } else if (selectedTerminal === "iterm2") {
           const profilePath = join(
@@ -179,12 +217,7 @@ export function registerInitCommand(program: Command): void {
             "claude-den",
             `iterm2-${selectedTheme.name}.json`,
           );
-          writeConfig(profilePath, configContent);
-          console.log(
-            chalk.green(
-              `  ✓ iTerm2 profile → ${profilePath}`,
-            ),
-          );
+          applyConfig(profilePath, configContent, "iTerm2 profile", dryRun);
           console.log(
             chalk.dim(
               "    Import via iTerm2 → Settings → Profiles → Other Actions → Import JSON Profiles",
@@ -196,11 +229,10 @@ export function registerInitCommand(program: Command): void {
       // Starship config
       if (setupStarship) {
         const starshipPath = join(home, ".config", "starship.toml");
-        if (existsSync(starshipPath)) {
-          backupFile(starshipPath);
+        applyConfig(starshipPath, generateStarshipConfig(selectedTheme), "Starship config", dryRun);
+        if (!dryRun) {
+          warnIfMissing("starship", "Starship", os.type);
         }
-        writeConfig(starshipPath, generateStarshipConfig(selectedTheme));
-        console.log(chalk.green(`  ✓ Starship config → ${starshipPath}`));
 
         // Check if Starship init is in shell config
         const shellRcPath =
@@ -229,15 +261,18 @@ export function registerInitCommand(program: Command): void {
       // tmux config
       if (setupTmux) {
         const tmuxPath = join(home, ".tmux.conf");
-        if (existsSync(tmuxPath)) {
-          backupFile(tmuxPath);
+        applyConfig(tmuxPath, generateTmuxConfig(selectedTheme), "tmux config", dryRun);
+        if (!dryRun) {
+          warnIfMissing("tmux", "tmux", os.type);
         }
-        writeConfig(tmuxPath, generateTmuxConfig(selectedTheme));
-        console.log(chalk.green(`  ✓ tmux config → ${tmuxPath}`));
       }
 
       // Done
-      console.log(chalk.bold.green("\n  Setup complete!\n"));
+      console.log(
+        chalk.bold.green(
+          dryRun ? "\n  Dry run complete — no files were modified.\n" : "\n  Setup complete!\n",
+        ),
+      );
       console.log(chalk.dim("  Quick tips:"));
       console.log(chalk.dim("    • den theme <name>   Switch theme"));
       console.log(chalk.dim("    • den layout coding  Launch coding layout"));

@@ -1,10 +1,12 @@
 import { Command } from "commander";
-import { execSync, execFileSync } from "node:child_process";
+import { execSync } from "node:child_process";
 import { writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import chalk from "chalk";
 import { LAYOUTS, generateTmuxLayoutScript } from "../configs/tmux/config.js";
+import { commandExists, installHint } from "../detect/system.js";
+import { detectOS } from "../detect/os.js";
 
 export function registerLayoutCommand(program: Command): void {
   const layoutCmd = program
@@ -44,12 +46,10 @@ export function registerLayoutCommand(program: Command): void {
       }
 
       // Check if tmux is installed
-      try {
-        execFileSync("which", ["tmux"], { stdio: "pipe" });
-      } catch {
-        console.log(
-          chalk.red("  tmux is not installed. Install with: brew install tmux\n"),
-        );
+      if (!commandExists("tmux")) {
+        const os = detectOS();
+        console.log(chalk.red(`  tmux is not installed.`));
+        console.log(chalk.dim(`  Install: ${installHint("tmux", os.type)}\n`));
         return;
       }
 

@@ -1,5 +1,4 @@
 import { Command } from "commander";
-import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
@@ -7,6 +6,7 @@ import chalk from "chalk";
 import { detectTerminal } from "../detect/terminal.js";
 import { detectCapabilities } from "../detect/capabilities.js";
 import { detectOS } from "../detect/os.js";
+import { commandExists, installHint } from "../detect/system.js";
 
 interface CheckResult {
   readonly name: string;
@@ -23,18 +23,6 @@ function check(
     return { name, ...result };
   } catch {
     return { name, status: "fail", message: "Check failed" };
-  }
-}
-
-const ALLOWED_COMMANDS = new Set(["claude", "starship", "tmux", "git"]);
-
-function commandExists(cmd: string): boolean {
-  if (!ALLOWED_COMMANDS.has(cmd)) return false;
-  try {
-    execFileSync("which", [cmd], { stdio: "pipe" });
-    return true;
-  } catch {
-    return false;
   }
 }
 
@@ -87,13 +75,13 @@ export function registerDoctorCommand(program: Command): void {
         check("Claude Code", () =>
           commandExists("claude")
             ? { status: "ok", message: "Installed" }
-            : { status: "fail", message: "Not found. Install: npm i -g @anthropic-ai/claude-code" },
+            : { status: "fail", message: `Not found. Install: ${installHint("claude", os.type)}` },
         ),
 
         // Starship
         check("Starship", () => {
           if (!commandExists("starship")) {
-            return { status: "warn", message: "Not installed. Install: brew install starship" };
+            return { status: "warn", message: `Not installed. Install: ${installHint("starship", os.type)}` };
           }
           const configPath = join(home, ".config", "starship.toml");
           return existsSync(configPath)
@@ -105,7 +93,7 @@ export function registerDoctorCommand(program: Command): void {
         check("tmux", () =>
           commandExists("tmux")
             ? { status: "ok", message: "Installed" }
-            : { status: "warn", message: "Not installed. Install: brew install tmux" },
+            : { status: "warn", message: `Not installed. Install: ${installHint("tmux", os.type)}` },
         ),
 
         // Font

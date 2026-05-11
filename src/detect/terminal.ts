@@ -1,7 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { platform } from "node:os";
 import { join } from "node:path";
+import { commandExists } from "./system.js";
 import type { TerminalInfo, TerminalType } from "../types.js";
 
 const TERMINAL_ENV_CHECKS: ReadonlyArray<{
@@ -98,15 +98,6 @@ const POSIX_COMMANDS: Partial<Record<TerminalType, string>> = {
   alacritty: "alacritty",
   warp: "warp-terminal",
 };
-
-function commandExists(cmd: string): boolean {
-  try {
-    execFileSync("which", [cmd], { stdio: "pipe" });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export function isTerminalInstalled(type: TerminalType): boolean {
   if (platform() === "darwin") {
